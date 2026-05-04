@@ -248,9 +248,6 @@ def top_level_heading_text(line: str) -> str | None:
     return stripped.removeprefix("#").strip().strip("#").strip().strip("*").strip()
 
 
-LLMS_CATEGORIES_PLACEHOLDER = "{{ categories_md }}"
-
-
 def extract_categories_body(markdown: str) -> str:
     """Return content under the `# Categories` heading, excluding the heading line itself."""
     lines = markdown.splitlines(keepends=True)
@@ -272,11 +269,33 @@ def extract_categories_body(markdown: str) -> str:
     return "".join(lines[start_idx:end_idx]).rstrip() + "\n"
 
 
-def build_llms_txt(template_text: str, readme_text: str, stars_data: dict[str, dict]) -> str:
-    """Render the llms.txt template by injecting the README's Categories body, then annotate stars."""
-    body = extract_categories_body(readme_text).rstrip()
-    rendered = template_text.replace(LLMS_CATEGORIES_PLACEHOLDER, body)
-    return annotate_entries_with_stars(rendered, stars_data, format_stars=str)
+def build_llms_txt(
+    template_text: str,
+    *,
+    readme_text: str,
+    stars_data: dict[str, dict],
+    categories: Sequence[ParsedSection],
+    total_entries: int,
+) -> str:
+    """Render the llms.txt entry point with the curated category catalog."""
+    categories_md = annotate_entries_with_stars(
+        extract_categories_body(readme_text).rstrip(),
+        stars_data,
+        format_stars=lambda n: f"GitHub stars: {n}",
+    )
+    text_env = Environment(autoescape=False, trim_blocks=True, lstrip_blocks=True)
+    rendered = text_env.from_string(template_text).render(
+        site_url=SITE_URL,
+        github_repo_url="https://github.com/vinta/awesome-python",
+        contributing_url="https://github.com/vinta/awesome-python/blob/master/CONTRIBUTING.md",
+        sponsorship_url=SPONSORSHIP_PUBLIC_URL,
+        sitemap_url=SITEMAP_URL,
+        index_markdown_url=f"{SITE_URL}index.md",
+        categories_md=categories_md,
+        total_entries=total_entries,
+        total_categories=len(categories),
+    )
+    return rendered.rstrip() + "\n"
 
 
 def annotate_entries_with_stars(
@@ -592,7 +611,13 @@ def build(repo_root: Path) -> None:
     sponsorship_md = repo_root / "SPONSORSHIP.md"
     sponsorship_md_mtime = datetime.fromtimestamp(sponsorship_md.stat().st_mtime, tz=UTC).date().isoformat()
     llms_template = (website / "templates" / "llms.txt").read_text(encoding="utf-8")
-    llms_txt = build_llms_txt(llms_template, readme_text, stars_data)
+    llms_txt = build_llms_txt(
+        llms_template,
+        readme_text=readme_text,
+        stars_data=stars_data,
+        categories=categories,
+        total_entries=total_entries,
+    )
     (site_dir / "robots.txt").write_text(build_robots_txt(), encoding="utf-8")
     sitemap_date = build_date.date().isoformat()
     sitemap_urls = [(SITE_URL, sitemap_date)]

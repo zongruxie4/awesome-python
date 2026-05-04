@@ -122,7 +122,7 @@ class TestBuild:
             encoding="utf-8",
         )
         (tpl_dir / "llms.txt").write_text(
-            "# Awesome Python\n\nUse this list to find Python tools.\n\n# Categories\n\n{{ categories_md }}\n",
+            "# Awesome Python\n\nHomepage: {{ site_url }}\n\n## Categories\n\n{{ categories_md }}\n",
             encoding="utf-8",
         )
 
@@ -222,11 +222,7 @@ class TestBuild:
         ]
         assert len(lastmods) == len(locs)
         assert lastmod_by_loc["https://awesome-python.com/sponsorship/"] == expected_sponsorship_lastmod
-        assert all(
-            start_date <= date.fromisoformat(lastmod) <= end_date
-            for loc, lastmod in lastmod_by_loc.items()
-            if loc != "https://awesome-python.com/sponsorship/"
-        )
+        assert all(start_date <= date.fromisoformat(lastmod) <= end_date for loc, lastmod in lastmod_by_loc.items() if loc != "https://awesome-python.com/sponsorship/")
         assert all(loc.startswith("https://awesome-python.com/") for loc in locs)
         assert all("?" not in loc for loc in locs)
 
@@ -316,6 +312,8 @@ class TestBuild:
 
             ---
 
+            **Tools**
+
             ## Widgets
 
             - [w1](https://example.com) - A widget.
@@ -352,14 +350,22 @@ class TestBuild:
         assert "- [w2](https://github.com/owner/w2) - A starred widget. (42 GitHub stars)" in index_md
 
         assert llms_txt.startswith("# Awesome Python\n")
-        assert "# Categories" in llms_txt
-        assert "Use this curated list" in llms_txt
+        assert "Scan the category index" in llms_txt
+        assert "Homepage: https://awesome-python.com/" in llms_txt
+        assert "Markdown homepage: https://awesome-python.com/index.md" in llms_txt
+        assert "GitHub repository: https://github.com/vinta/awesome-python" in llms_txt
+        assert "Contributing guide: https://github.com/vinta/awesome-python/blob/master/CONTRIBUTING.md" in llms_txt
+        assert "Sponsorship: https://awesome-python.com/sponsorship/" in llms_txt
+        assert "Sitemap: https://awesome-python.com/sitemap.xml" in llms_txt
+        assert "## Categories" in llms_txt
+        assert "**Tools**" in llms_txt
+        assert "- [Widgets](#widgets)" in llms_txt
         assert "## Widgets" in llms_txt
         assert "- [w1](https://example.com) - A widget." in llms_txt
-        assert "- [w2](https://github.com/owner/w2) - A starred widget. (42)" in llms_txt
-        assert "{{ categories_md }}" not in llms_txt
+        assert "- [w2](https://github.com/owner/w2) - A starred widget. (GitHub stars: 42)" in llms_txt
+        assert llms_txt != readme
+        assert llms_txt != index_md
         assert "# Contributing" not in llms_txt
-        assert "Help!" not in llms_txt
 
     def test_build_cleans_stale_output(self, tmp_path):
         readme = textwrap.dedent("""\
