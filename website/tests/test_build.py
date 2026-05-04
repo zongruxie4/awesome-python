@@ -1,6 +1,7 @@
 """Tests for the build module."""
 
 import json
+import os
 import shutil
 import textwrap
 import xml.etree.ElementTree as ET
@@ -86,6 +87,10 @@ class TestSubcategoryPath:
 
 
 class TestBuild:
+    @pytest.fixture(autouse=True)
+    def _make_sponsorship_md(self, tmp_path):
+        (tmp_path / "SPONSORSHIP.md").write_text("# Sponsorship\n", encoding="utf-8")
+
     def _make_repo(self, tmp_path, readme):
         (tmp_path / "README.md").write_text(readme, encoding="utf-8")
         tpl_dir = tmp_path / "website" / "templates"
@@ -189,6 +194,9 @@ class TestBuild:
             Help!
         """)
         self._make_repo(tmp_path, readme)
+        sponsorship_mtime = datetime(2024, 1, 2, tzinfo=UTC).timestamp()
+        os.utime(tmp_path / "SPONSORSHIP.md", (sponsorship_mtime, sponsorship_mtime))
+        expected_sponsorship_lastmod = "2024-01-02"
         start_date = datetime.now(UTC).date()
         build(tmp_path)
         end_date = datetime.now(UTC).date()
@@ -202,6 +210,7 @@ class TestBuild:
         ns = {"sitemap": "http://www.sitemaps.org/schemas/sitemap/0.9"}
         locs = [loc.text or "" for loc in root.findall("sitemap:url/sitemap:loc", ns)]
         lastmods = [lastmod.text or "" for lastmod in root.findall("sitemap:url/sitemap:lastmod", ns)]
+        lastmod_by_loc = dict(zip(locs, lastmods, strict=True))
 
         assert root.tag == "{http://www.sitemaps.org/schemas/sitemap/0.9}urlset"
         assert locs == [
@@ -212,7 +221,12 @@ class TestBuild:
             "https://awesome-python.com/sponsorship/",
         ]
         assert len(lastmods) == len(locs)
-        assert all(start_date <= date.fromisoformat(lastmod) <= end_date for lastmod in lastmods)
+        assert lastmod_by_loc["https://awesome-python.com/sponsorship/"] == expected_sponsorship_lastmod
+        assert all(
+            start_date <= date.fromisoformat(lastmod) <= end_date
+            for loc, lastmod in lastmod_by_loc.items()
+            if loc != "https://awesome-python.com/sponsorship/"
+        )
         assert all(loc.startswith("https://awesome-python.com/") for loc in locs)
         assert all("?" not in loc for loc in locs)
 

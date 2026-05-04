@@ -496,13 +496,9 @@ def build(repo_root: Path) -> None:
         group_categories: Sequence[ParsedSection] | None = None,
     ) -> None:
         page_dir.mkdir(parents=True, exist_ok=True)
-        category_description = category_meta_description(
-            category["name"], len(entries), category["description"]
-        )
+        category_description = category_meta_description(category["name"], len(entries), category["description"])
         category_json_ld = json.dumps(
-            build_category_json_ld(
-                category["name"], category_url, category_description, entries
-            ),
+            build_category_json_ld(category["name"], category_url, category_description, entries),
             ensure_ascii=False,
         ).replace("</", "<\\/")
         (page_dir / "index.html").write_text(
@@ -593,6 +589,8 @@ def build(repo_root: Path) -> None:
         shutil.copytree(static_src, static_dst, dirs_exist_ok=True)
 
     markdown_index = annotate_entries_with_stars(remove_sponsors_section(readme_text), stars_data)
+    sponsorship_md = repo_root / "SPONSORSHIP.md"
+    sponsorship_md_mtime = datetime.fromtimestamp(sponsorship_md.stat().st_mtime, tz=UTC).date().isoformat()
     llms_template = (website / "templates" / "llms.txt").read_text(encoding="utf-8")
     llms_txt = build_llms_txt(llms_template, readme_text, stars_data)
     (site_dir / "robots.txt").write_text(build_robots_txt(), encoding="utf-8")
@@ -604,7 +602,7 @@ def build(repo_root: Path) -> None:
         sitemap_urls.append((BUILTIN_PUBLIC_URL, sitemap_date))
     for cat_slug, sub_slug, _ in sorted(subcat_meta.values()):
         sitemap_urls.append((subcategory_public_url(cat_slug, sub_slug), sitemap_date))
-    sitemap_urls.append((SPONSORSHIP_PUBLIC_URL, sitemap_date))
+    sitemap_urls.append((SPONSORSHIP_PUBLIC_URL, sponsorship_md_mtime))
     write_sitemap_xml(site_dir / "sitemap.xml", sitemap_urls)
     (site_dir / "index.md").write_text(markdown_index, encoding="utf-8")
     (site_dir / "llms.txt").write_text(llms_txt, encoding="utf-8")
