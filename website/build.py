@@ -290,7 +290,6 @@ def build_llms_txt(
         contributing_url="https://github.com/vinta/awesome-python/blob/master/CONTRIBUTING.md",
         sponsorship_url=SPONSORSHIP_PUBLIC_URL,
         sitemap_url=SITEMAP_URL,
-        index_markdown_url=f"{SITE_URL}index.md",
         categories_md=categories_md,
         total_entries=total_entries,
         total_categories=len(categories),
@@ -607,7 +606,6 @@ def build(repo_root: Path) -> None:
     if static_src.exists():
         shutil.copytree(static_src, static_dst, dirs_exist_ok=True)
 
-    markdown_index = annotate_entries_with_stars(remove_sponsors_section(readme_text), stars_data)
     sponsorship_md = repo_root / "SPONSORSHIP.md"
     sponsorship_md_mtime = datetime.fromtimestamp(sponsorship_md.stat().st_mtime, tz=UTC).date().isoformat()
     llms_template = (website / "templates" / "llms.txt").read_text(encoding="utf-8")
@@ -629,7 +627,6 @@ def build(repo_root: Path) -> None:
         sitemap_urls.append((subcategory_public_url(cat_slug, sub_slug), sitemap_date))
     sitemap_urls.append((SPONSORSHIP_PUBLIC_URL, sponsorship_md_mtime))
     write_sitemap_xml(site_dir / "sitemap.xml", sitemap_urls)
-    (site_dir / "index.md").write_text(markdown_index, encoding="utf-8")
     (site_dir / "llms.txt").write_text(llms_txt, encoding="utf-8")
 
     print(f"Built site with {len(parsed_groups)} groups, {len(categories)} categories")

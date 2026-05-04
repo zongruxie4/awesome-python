@@ -282,7 +282,7 @@ class TestBuild:
         assert parser.meta_by_name["description"] == "Widget libraries. Also see awesome-widgets. Explore 2 curated Python projects in Widgets."
         assert parser.links_by_rel["canonical"] == "https://awesome-python.com/categories/widgets/"
         assert parser.meta_by_property["og:url"] == "https://awesome-python.com/categories/widgets/"
-        assert '<link rel="alternate" type="text/markdown" href="/index.md" />' not in category_html
+        assert '<link rel="alternate" type="text/plain" href="/llms.txt" title="LLMs text entry point" />' not in category_html
         assert "<h1>Widgets</h1>" in category_html
         assert 'Widget libraries. Also see <a href="https://example.com/widgets" target="_blank" rel="noopener">awesome-widgets</a>.' in category_html
         assert 'href="https://example.com/w1"' in category_html
@@ -292,7 +292,7 @@ class TestBuild:
         assert "42" in category_html
         assert "2026-01-01T00:00:00+00:00" in category_html
 
-    def test_build_creates_markdown_alternate_without_sponsors(self, tmp_path):
+    def test_build_creates_llms_text_alternate_without_sponsors(self, tmp_path):
         readme = textwrap.dedent("""\
             # Awesome Python
 
@@ -337,22 +337,15 @@ class TestBuild:
 
         site = tmp_path / "website" / "output"
         index_html = (site / "index.html").read_text(encoding="utf-8")
-        index_md = (site / "index.md").read_text(encoding="utf-8")
         llms_txt = (site / "llms.txt").read_text(encoding="utf-8")
 
-        assert '<link rel="alternate" type="text/markdown" href="/index.md" />' in index_html
-        assert index_md.startswith("# Awesome Python\n\nIntro.\n\n# Categories")
-        assert "# **Sponsors**" not in index_md
-        assert "Sponsor" not in index_md
-        assert "SPONSORSHIP.md" not in index_md
-        assert "## Widgets" in index_md
-        assert "- [w1](https://example.com) - A widget." in index_md
-        assert "- [w2](https://github.com/owner/w2) - A starred widget. (42 GitHub stars)" in index_md
+        assert '<link rel="alternate" type="text/plain" href="/llms.txt" title="LLMs text entry point" />' in index_html
 
         assert llms_txt.startswith("# Awesome Python\n")
         assert "Scan the category index" in llms_txt
         assert "Homepage: https://awesome-python.com/" in llms_txt
-        assert "Markdown homepage: https://awesome-python.com/index.md" in llms_txt
+        assert "Markdown homepage" not in llms_txt
+        assert "https://awesome-python.com/index.md" not in llms_txt
         assert "GitHub repository: https://github.com/vinta/awesome-python" in llms_txt
         assert "Contributing guide: https://github.com/vinta/awesome-python/blob/master/CONTRIBUTING.md" in llms_txt
         assert "Sponsorship: https://awesome-python.com/sponsorship/" in llms_txt
@@ -364,7 +357,6 @@ class TestBuild:
         assert "- [w1](https://example.com) - A widget." in llms_txt
         assert "- [w2](https://github.com/owner/w2) - A starred widget. (GitHub stars: 42)" in llms_txt
         assert llms_txt != readme
-        assert llms_txt != index_md
         assert "# Contributing" not in llms_txt
 
     def test_build_cleans_stale_output(self, tmp_path):
