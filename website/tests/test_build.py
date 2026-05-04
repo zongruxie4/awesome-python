@@ -137,31 +137,31 @@ class TestBuild:
 
             Intro.
 
-            ---
+            ## Projects
 
             **Tools**
 
-            ## Widgets
+            ### Widgets
 
             _Widget libraries. Also see [awesome-widgets](https://example.com/widgets)._
 
             - [w1](https://example.com) - A widget.
 
-            ## Gadgets
+            ### Gadgets
 
             _Gadget tools._
 
             - [g1](https://example.com) - A gadget.
 
-            # Resources
+            ## Resources
 
             Info.
 
-            ## Newsletters
+            ### Newsletters
 
             - [NL](https://example.com)
 
-            # Contributing
+            ## Contributing
 
             Help!
         """)
@@ -179,17 +179,17 @@ class TestBuild:
 
             Intro.
 
-            ---
+            ## Projects
 
             **Tools**
 
-            ## Widgets
+            ### Widgets
 
             - Sync
 
                 - [w1](https://example.com) - A widget.
 
-            # Contributing
+            ## Contributing
 
             Help!
         """)
@@ -232,7 +232,7 @@ class TestBuild:
 
             Intro.
 
-            ---
+            ## Projects
 
             **Tools**
 
@@ -298,28 +298,28 @@ class TestBuild:
 
             Intro.
 
-            # **Sponsors**
+            ## **Sponsors**
 
             - **[Sponsor](https://sponsor.example.com)**: Sponsored tool.
 
             > Become a sponsor: [Sponsor us](SPONSORSHIP.md).
 
-            # Categories
+            ## Categories
 
             **Tools**
 
             - [Widgets](#widgets)
 
-            ---
+            ## Projects
 
             **Tools**
 
-            ## Widgets
+            ### Widgets
 
             - [w1](https://example.com) - A widget.
             - [w2](https://github.com/owner/w2) - A starred widget.
 
-            # Contributing
+            ## Contributing
 
             Help!
         """)
@@ -353,7 +353,7 @@ class TestBuild:
         assert "## Categories" in llms_txt
         assert "**Tools**" in llms_txt
         assert "- [Widgets](#widgets)" in llms_txt
-        assert "## Widgets" in llms_txt
+        assert "### Widgets" in llms_txt
         assert "- [w1](https://example.com) - A widget." in llms_txt
         assert "- [w2](https://github.com/owner/w2) - A starred widget. (GitHub stars: 42)" in llms_txt
         assert llms_txt != readme
@@ -363,7 +363,7 @@ class TestBuild:
         readme = textwrap.dedent("""\
             # T
 
-            ---
+            ## Projects
 
             ## Only
 
@@ -387,7 +387,7 @@ class TestBuild:
         readme = textwrap.dedent("""\
             # T
 
-            ---
+            ## Projects
 
             ## Stuff
 
@@ -431,7 +431,7 @@ class TestBuild:
         readme = textwrap.dedent("""\
             # T
 
-            ---
+            ## Projects
 
             **Widgets**
 
@@ -538,7 +538,7 @@ class TestBuild:
 
             Intro.
 
-            ---
+            ## Projects
 
             **Tools**
 
@@ -591,7 +591,7 @@ class TestBuild:
         readme = textwrap.dedent("""\
             # T
 
-            ---
+            ## Projects
 
             **AI & ML**
 
@@ -624,7 +624,7 @@ class TestBuild:
         readme = textwrap.dedent("""\
             # T
 
-            ---
+            ## Projects
 
             **Web**
 
@@ -659,7 +659,7 @@ class TestBuild:
         readme = textwrap.dedent("""\
             # T
 
-            ---
+            ## Projects
 
             **Web**
 
@@ -691,7 +691,7 @@ class TestBuild:
         readme = textwrap.dedent("""\
             # T
 
-            ---
+            ## Projects
 
             **AI & ML**
 
@@ -731,7 +731,7 @@ class TestBuild:
         readme = textwrap.dedent("""\
             # T
 
-            ---
+            ## Projects
 
             ## Sneaky </script><script>x=1</script>
 
@@ -760,7 +760,7 @@ class TestBuild:
         readme = textwrap.dedent("""\
             # T
 
-            ---
+            ## Projects
 
             **AI & ML**
 
@@ -800,7 +800,7 @@ class TestBuild:
         readme = textwrap.dedent("""\
             # T
 
-            ---
+            ## Projects
 
             **AI & ML**
 
@@ -980,7 +980,7 @@ class TestExtractEntries:
         readme = textwrap.dedent("""\
             # T
 
-            ---
+            ## Projects
 
             **Tools**
 
@@ -1004,7 +1004,7 @@ class TestExtractEntries:
         readme = textwrap.dedent("""\
             # T
 
-            ---
+            ## Projects
 
             **Tools**
 
@@ -1031,7 +1031,7 @@ class TestExtractEntries:
         readme = textwrap.dedent("""\
             # T
 
-            ---
+            ## Projects
 
             ## Stdlib
 
@@ -1050,7 +1050,7 @@ class TestExtractEntries:
         readme = textwrap.dedent("""\
             # T
 
-            ---
+            ## Projects
 
             **Tools**
 

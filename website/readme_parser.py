@@ -114,6 +114,13 @@ def _heading_text(node: SyntaxTreeNode) -> str:
     return ""
 
 
+def _heading_level(node: SyntaxTreeNode) -> int | None:
+    """Return the numeric level for a heading node."""
+    if node.type != "heading" or not node.tag.startswith("h"):
+        return None
+    return int(node.tag[1:])
+
+
 def _extract_description_children(nodes: list[SyntaxTreeNode]) -> list[SyntaxTreeNode]:
     """Extract description children from the first paragraph if it's a single <em> block.
 
@@ -303,7 +310,7 @@ def _parse_grouped_sections(
 ) -> list[ParsedGroup]:
     """Parse nodes into groups of categories using bold markers as group boundaries.
 
-    Bold-only paragraphs (**Group Name**) delimit groups. H2 headings under each
+    Bold-only paragraphs (**Group Name**) delimit groups. H3 headings under each
     bold marker become categories within that group. Categories appearing before
     any bold marker go into an "Other" group.
     """
@@ -341,7 +348,7 @@ def _parse_grouped_sections(
             flush_group()
             current_group_name = bold_name
             current_cat_body = []
-        elif node.type == "heading" and node.tag == "h2":
+        elif node.type == "heading" and node.tag in ("h2", "h3"):
             flush_cat()
             current_cat_name = _heading_text(node)
             current_cat_body = []
@@ -383,7 +390,7 @@ def _parse_sponsor_item(inline: SyntaxTreeNode) -> ParsedSponsor | None:
 
 
 def parse_sponsors(text: str) -> list[ParsedSponsor]:
-    """Parse the `# Sponsors` section of README.md into a list of sponsors.
+    """Parse the `Sponsors` section of README.md into a list of sponsors.
 
     Expects bullets in the form `**[name](url)**: description`.
     Returns [] if no Sponsors section exists.
@@ -395,14 +402,18 @@ def parse_sponsors(text: str) -> list[ParsedSponsor]:
 
     start_idx = None
     end_idx = len(children)
+    start_level = None
     for i, node in enumerate(children):
-        if node.type == "heading" and node.tag == "h1":
-            title = _heading_text(node).strip().lower()
-            if start_idx is None and title == "sponsors":
-                start_idx = i + 1
-            elif start_idx is not None:
-                end_idx = i
-                break
+        level = _heading_level(node)
+        if level is None:
+            continue
+        title = _heading_text(node).strip().lower()
+        if start_idx is None and title == "sponsors":
+            start_idx = i + 1
+            start_level = level
+        elif start_idx is not None and start_level is not None and level <= start_level:
+            end_idx = i
+            break
     if start_idx is None:
         return []
 
@@ -426,26 +437,26 @@ def parse_readme(text: str) -> list[ParsedGroup]:
     """Parse README.md text into grouped categories.
 
     Returns a list of ParsedGroup dicts containing nested categories.
-    Content between the thematic break (---) and # Resources or # Contributing
-    is parsed as categories grouped by bold markers (**Group Name**).
+    Content between the Projects heading and Resources or Contributing is parsed
+    as categories grouped by bold markers (**Group Name**).
     """
     md = MarkdownIt("commonmark")
     tokens = md.parse(text)
     root = SyntaxTreeNode(tokens)
     children = root.children
 
-    # Find thematic break (---) and section boundaries in one pass
-    hr_idx = None
+    # Find Projects and section boundaries in one pass.
+    projects_idx = None
     cat_end_idx = None
     for i, node in enumerate(children):
-        if hr_idx is None and node.type == "hr":
-            hr_idx = i
-        elif node.type == "heading" and node.tag == "h1":
+        if _heading_level(node) in (1, 2):
             text_content = _heading_text(node)
-            if cat_end_idx is None and text_content in ("Resources", "Contributing"):
+            if projects_idx is None and text_content == "Projects":
+                projects_idx = i
+            elif cat_end_idx is None and text_content in ("Resources", "Contributing"):
                 cat_end_idx = i
-    if hr_idx is None:
+    if projects_idx is None:
         return []
 
-    cat_nodes = children[hr_idx + 1 : cat_end_idx or len(children)]
+    cat_nodes = children[projects_idx + 1 : cat_end_idx or len(children)]
     return _parse_grouped_sections(cat_nodes)

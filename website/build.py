@@ -243,13 +243,14 @@ def write_sitemap_xml(path: Path, urls: Sequence[tuple[str, str]]) -> None:
 
 def top_level_heading_text(line: str) -> str | None:
     stripped = line.strip()
-    if not stripped.startswith("# "):
+    match = re.match(r"^(#{1,2})\s+(.+)$", stripped)
+    if match is None:
         return None
-    return stripped.removeprefix("#").strip().strip("#").strip().strip("*").strip()
+    return match.group(2).strip().strip("#").strip().strip("*").strip()
 
 
 def extract_categories_body(markdown: str) -> str:
-    """Return content under the `# Categories` heading, excluding the heading line itself."""
+    """Return content from `Categories` through `Projects`, excluding later sections."""
     lines = markdown.splitlines(keepends=True)
     start_idx = None
     end_idx = len(lines)
@@ -261,7 +262,7 @@ def extract_categories_body(markdown: str) -> str:
             start_idx = i + 1
             while start_idx < len(lines) and lines[start_idx].strip() == "":
                 start_idx += 1
-        elif start_idx is not None and i >= start_idx:
+        elif start_idx is not None and heading.lower() in ("resources", "contributing"):
             end_idx = i
             break
     if start_idx is None:
